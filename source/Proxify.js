@@ -92,7 +92,7 @@ enyo.kind({
 			]}
 		]},
 		
-		{name: "statusText", content: "Select one"},
+		/*{name: "statusText", content: "Select one"},*/
 		
 		{kind: "PalmService",
 		name: "setProxy",
@@ -114,7 +114,7 @@ enyo.kind({
 				"action":action,
 				"proxyInfo":{"proxyConfigType":"manualProxy","proxyScope":"default","proxyServer":address,"proxyPort":port}
 			});
-			this.$.statusText.setContent(address);
+			//this.$.statusText.setContent(address);
 		}
 	},
 	
@@ -142,6 +142,7 @@ enyo.kind({
 		var info = enyo.fetchDeviceInfo();
 		if (info) {
 			MyApps.AddList.data.majorVersion = info.platformVersionMajor
+			//this.$.statusText.setContent(info.platformVersionMajor);
 		}
 		
 		try {
@@ -199,7 +200,7 @@ enyo.kind({
 				this.$.checkOff.hide();
 			}
 			
-			this.$.listProxyName.setContent(record.proxyName);
+			//this.$.listProxyName.setContent(record.proxyName);
 			this.$.address.setContent(record.proxyAddress + ":" + record.proxyPort);
 			return true;
 		}
@@ -333,7 +334,7 @@ enyo.kind({
 			{name: "add", kind: "MyApps.AddList"},
 		]},
 		
-		{name: "statusText", content: "Select one"},
+		/*{name: "statusText", content: "Select one"},*/
 	],
 	
 	ready: function() {
@@ -344,7 +345,7 @@ enyo.kind({
 			var majorVersion = info.platformVersionMajor
 			
 			//alert(majorVersion);
-			this.$.statusText.setContent(majorVersion);
+			//this.$.statusText.setContent(majorVersion);
 		}
 	},
 	
