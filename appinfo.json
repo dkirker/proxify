@@ -1,10 +1,12 @@
 {
-  "id": "com.palm.proxify",
-  "version": "1.0.1",
+  "id": "com.palm.app.proxify",
+  "version": "1.0.2",
   "vendor": "copystring",
   "type": "web",
   "main": "index.html",
-  "title": "Proxify",
+  "title": "Web Proxy",
   "uiRevision": "2",
   "icon": "proxify.png",
+  "splashicon": "icon-256x256.png",
+  "keywords": ["Settings", "Preferences", "Wireless", "Proxy", "Proxify", "Networking"]
 }
