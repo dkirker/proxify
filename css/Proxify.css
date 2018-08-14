@@ -1,0 +1,70 @@
+.header-icon {
+	width: 32px;
+	height: 32px;
+	background: url(../images/header-icon.png);
+}
+
+.header-shadow,
+.footer-shadow {
+	position: absolute; 
+	z-index: 100;
+	height: 3px;
+	width: 100%;
+	pointer-events: none;
+}
+.header-shadow {
+	top: 54px;
+	background:transparent url('../images/header-shadow.png') bottom repeat-x;
+}
+.footer-shadow {
+	bottom: 0;
+	height: 57px; 
+	background:transparent url('../images/footer-shadow.png') top repeat-x;
+}
+
+.pref-text-normal {
+	font-size: 16px;
+	color: #666;
+}
+	
+.pref-text-big-bold {
+	font-size: 22px;
+	font-weight: bold;
+	color: #666;
+}
+
+.pref-text-italics {
+	font-size: 16px;
+	color: #666;
+	font-style:italic;
+}
+
+.list {
+	padding: 0px;
+	margin: 0px;
+}
+
+.add-icon {
+	width: 18px;
+	height: 18px;
+	background: url(../images/add-icon.png) no-repeat center center;
+}
+
+.info-icon-enabled {
+	width: 25px;
+	height: 25px;
+	background: url(../images/info-icon-sprite.png) no-repeat center center;  
+}
+
+.info-icon-enabled-connected {
+	width: 25px;
+	height: 25px;
+	background: url(../images/info-icon-sprite-connected.png) no-repeat center center;  
+}
+
+.info-icon-empty {
+	width: 25px;
+	height: 25px;
+	background: url(../images/info-icon-sprite-empty.png) no-repeat center center;  
+}
+

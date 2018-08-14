@@ -1,27 +1,27 @@
 enyo.kind({
 	name: "MyApps.AddList",
 	kind: enyo.VFlexBox,
+
 	components: [
-		{kind: "RowGroup", caption: "Add a proxy", components: [
-			{kind: "Control", layoutKind: "VFlexLayout", components: [
-				{kind: "Control", layoutKind: "HFlexLayout", components: [
-					{changeOnInput: true, onchange: "inputOnChange", flex: 1, caption: "Name", hint: "Proxy name (not the IP!)", kind: "Input", name: "proxyName", style: "width:70%"},
-					{disabled: true, name: "add", kind: "Button", flex: 1, caption: "Add", onclick: "addProxy"},
-				]},
-				{kind: "Control", layoutKind: "HFlexLayout", components: [
-					{flex: 1, kind: "Control", layoutKind: "HFlexLayout", pack: "center", align: "mid", components: [
-						{content: "IP:", layoutKind: "VFlexLayout", pack: "center"},
-						{name: "proxyAddress", hint: "0.0.0.0", kind: "Input", style: "width: 50%", flex: 1},
-						{content: ":", layoutKind: "VFlexLayout", pack: "center"},
-						{name: "proxyPort", value: "8080", kind: "Input", flex: 1},
-					]},
-				]},
+		{kind: "Scroller", flex: 1, className: "box-center", autoHorizontal: false, horizontal: false, components: [
+			{kind: "RowGroup", caption: "Name", components: [
+				{name: "proxyName", kind: "Input", changeOnInput: true, onchange: "inputOnChange", flex: 1, caption: "Name", hint: $L("Name")},
 			]},
-		]},
-		{kind: "Dialog", components: [
-			{name: "dialogContent", layoutKind: "HFlexLayout", pack: "center", style: "Padding-left: 10px"},
-			{kind: "Button", flex: 1, caption: "OK", onclick: "closeDialog"},
-		]},
+			{kind: "RowGroup", caption: "Host", components: [
+				{name: "proxyAddress", kind: "Input", hint: $L("Address"), flex: 1},
+				{name: "proxyPort", kind: "Input", hint: $L("Port"), flex: 1}
+			]},
+			{kind: "RowGroup", caption: "Authentication", components: [
+				{name: "proxyUsername", kind: "Input", hint: $L("Username"), flex: 1},
+				{name: "proxyPassword", kind: "Input", hint: $L("Password"), flex: 1}
+			]},
+			{kind: "Button", name: "add", disabled: true, flex: 1, caption: "Save", onclick: "addProxy"},
+			{kind: "Button", name: "cancel", flex: 1, caption: "Cancel", onclick: "cancelAddProxy"},
+			{kind: "Dialog", components: [
+				{name: "dialogContent", layoutKind: "HFlexLayout", pack: "center", style: "Padding-left: 10px"},
+				{kind: "Button", flex: 1, caption: "OK", onclick: "closeDialog"},
+			]}
+		]}
 	],
 	
 	addProxy: function(inSender, inEvent){
@@ -35,6 +35,8 @@ enyo.kind({
 			};
 		};
 		
+		console.log("addProxy adding " + name);
+
 		MyApps.Proxify.pane.back();
 		var proxy = this.$.proxyAddress.getValue();
 		var port = this.$.proxyPort.getValue();
@@ -42,20 +44,25 @@ enyo.kind({
 			MyApps.List.db.transaction(
 				function (tx) {
 					tx.executeSql('INSERT INTO table1 (proxyName, proxyAddress, proxyPort) VALUES ("' + name + '","' + proxy + '","' + port + '");');
+					console.log("Executing");
 				}.bind(this)
 			);
 		}
 		catch (e)
 		{
-			//this.$.results.setContent(e);      
+			console.log("ListAdd addProxy Exception: " + e);
+			//this.$.results.setContent(e); 
 		}
+	},
+	cancelAddProxy: function(inSender, inEvent) {
+		MyApps.Proxify.pane.back();
 	},
 	inputOnChange :function(inSender) {
 		if (inSender.getValue() != "") {
-			this.$.add.setDisabled(false)
+			this.$.add.setDisabled(false);
 		}
 		else {
-			this.$.add.setDisabled(true)
+			this.$.add.setDisabled(true);
 		}
 	},
 	
@@ -68,26 +75,39 @@ enyo.kind({
 enyo.kind({
 	name: "MyApps.List",
 	kind: enyo.VFlexBox,
+
+	events: {
+		onProxyEdit: "",
+		onProxyAdd: ""
+	},
+
 	components: [
-		{kind: "Divider", name: "listDivider", caption: "Proxy list"},
-		{kind: "Scroller", flex: 1, components: [
-			{kind: "RowItem", onclick: "selectOff", Xonmousedown: "selectOff", components: [
-				{layoutKind: "HFlexLayout", align: "center", components: [
-					{layoutKind: "VFlexLayout", flex: 1, components: [
-						{content: "Off"},
-					]},
-					{name: "checkOff", kind: "Image", layoutKind: "HFlexLayout", align: "right", src: "images/selection-checkmark.png"},
-				]},
-			]},
-			{name: "proxyList", className: "list", kind: "VirtualRepeater", onSetupRow: "listSetupRow", components: [
-				{name: "item", flex: 1, kind: "SwipeableItem", layoutKind: "VFlexLayout", onConfirm: "deleteItem", onclick: "selectItem", Xonmousedown: "selectItem", components: [
-					{layoutKind: "HFlexLayout", align: "center", components: [
-						{layoutKind: "VFlexLayout", flex: 1, components: [
-							{name: "listProxyName"},
-							{name: "address"},
+		{kind: "Scroller", flex: 1, className: "box-center", horizontal: false, components: [
+			{kind: "VFlexBox", components: [
+				{ kind: "RowGroup", name: "proxyListGroup",  caption: $L("Available Proxies"), layoutKind: "VFlexLayout", showing: true, components: [
+					{kind: "RowItem", className: "enyo-first", onclick: "selectOff", Xonmousedown: "selectOff", tapHighlight: true, components: [
+						{layoutKind: "HFlexLayout", align: "center", components: [
+							{layoutKind: "VFlexLayout", flex: 1, components: [
+								{content: "Off"},
+							]},
+							{name: "checkOff", kind: "Image", layoutKind: "HFlexLayout", align: "right", src: "images/selection-checkmark.png"},
 						]},
-						{name: "check", kind: "Image", layoutKind: "HFlexLayout", align: "right", src: "images/selection-checkmark.png"},
 					]},
+					{name: "proxyList", className: "list", kind: "VirtualRepeater", onSetupRow: "listSetupRow", flex: 1, components: [
+						{name: "proxyRow", kind: "SwipeableItem", layoutKind: "HFlexLayout", pack: "center", tapHighlight: true, confirmRequired: true, confirmCaption: $L("Delete"), onConfirm: "deleteItem", onclick: "selectItem", Xonmousedown: "selectItem", components: [
+							{layoutKind: "VFlexLayout", flex: 1, components: [
+								{name: "listProxyName"},
+								{name: "address"},
+							]},
+							{name: "check", kind: "Image", layoutKind: "HFlexLayout", align: "right", src: "images/selection-checkmark.png"},
+							{name: "proxyInfo", className: "info-icon-enabled", showing: true, style: "margin: 5px 3px 0px 0px;", onmouseup: "proxyEdit"}
+						]}
+					]},
+					{ kind: "RowItem", className: "enyo-last", layoutKind: "HFlexLayout", tapHighlight: true, onmouseup: "proxyAdd", components: [
+					 	{ className: "proxy-add-icon", style: "margin: 3px 0;" },
+					 	{ content: $L( "Add Proxy" ), className: "pref-text-normal", style: "padding-left:10px;" }
+					]}
+
 				]}
 			]}
 		]},
@@ -138,7 +158,7 @@ enyo.kind({
 		this.inherited(arguments);
 	},
 	
-	ready : function() {
+	ready: function() {
 		var info = enyo.fetchDeviceInfo();
 		if (info) {
 			MyApps.AddList.data.majorVersion = info.platformVersionMajor
@@ -166,6 +186,7 @@ enyo.kind({
 		}
 		catch (e)
 		{
+			console.log("List ready Exception: " + e);
 			//this.$.results.setContent(e);      
 		}
 	},
@@ -184,6 +205,7 @@ enyo.kind({
 		var length = results.rows.length// + 1
 		//alert(results.rows.length);
 		for (var i = 0; i < length; i++) {
+			console.log("row: " + JSON.stringify(results.rows.item(i)));
 			list[i] = results.rows.item(i);
 		}
 		MyApps.AddList.data = list; //set list to data
@@ -193,6 +215,8 @@ enyo.kind({
 	listSetupRow: function(inSender, inIndex) {
 		var record = MyApps.AddList.data[inIndex]; //set data arry values to record
 		if (record) {
+			this.$.proxyRow.show();
+
 			if (MyApps.AddList.data.selected != inIndex) {
 				this.$.check.hide();
 			}
@@ -200,9 +224,11 @@ enyo.kind({
 				this.$.checkOff.hide();
 			}
 			
-			//this.$.listProxyName.setContent(record.proxyName);
-			this.$.address.setContent(record.proxyAddress + ":" + record.proxyPort);
+			this.$.listProxyName.setContent(record.proxyName);
+			//this.$.address.setContent(record.proxyAddress + ":" + record.proxyPort);
 			return true;
+		} else {
+			this.$.proxyRow.hide();
 		}
 	},
 	
@@ -276,6 +302,7 @@ enyo.kind({
 		}
 		catch (e)
 		{
+			console.log("List selectItem Exception: " + e);
 			//this.$.results.setContent(e);      
 		}
 		
@@ -289,48 +316,70 @@ enyo.kind({
 	},
 	
 	deleteItem: function(inSender, inIndex) {
-		var name
-		if (MyApps.AddList.data.selected == inIndex) {
-			var address;
-			var port;
-			var record = MyApps.AddList.data[inIndex];
-			this.set_proxy("rmv", address, port);
-		}
-	
+		var record = MyApps.AddList.data[inIndex];
+		var name;
+		var address;
+		var port;
+
 		if (record) {
-			name = record.proxyName
-			address = record.proxyAddress
-			port = parseInt(record.proxyPort)
-		}
-		
-		try {
-			MyApps.List.db.transaction(
-				function (tx) {
-					tx.executeSql('DELETE FROM table1 WHERE proxyName="'+name+'";', [], [], []);
-					tx.executeSql('select * from table1', [], enyo.bind(this,this.queryResponse), enyo.bind(this,this.errorHandler)); 
-				}.bind(this)
-			);
-		}
-		catch (e)
-		{
-			//this.$.results.setContent(e);      
+			name = record.proxyName;
+			address = record.proxyAddress;
+			port = parseInt(record.proxyPort);
+	
+			console.log("List deleteItem deleting " + name);
+
+			if (MyApps.AddList.data.selected == inIndex) {
+				this.set_proxy("rmv", address, port);
+			}
+	
+			try {
+				MyApps.List.db.transaction(
+					function (tx) {
+						tx.executeSql('DELETE FROM table1 WHERE proxyName="'+name+'";', [], [], []);
+						tx.executeSql('select * from table1', [], enyo.bind(this,this.queryResponse), enyo.bind(this,this.errorHandler)); 
+					}.bind(this)
+				);
+			}
+			catch (e)
+			{
+				console.log("List deleteItem Exception: " + e);
+				//this.$.results.setContent(e);      
+			}
+		} else {
+			console.log("Error! record " + inIndex + " not found!");
 		}
 	},
+	proxyEdit: function(inSender, inEvent, inIndex) {
+		this.doProxyEdit(inIndex);
+	},
+	proxyAdd: function(inSender, inEvent, inIndex) {
+		console.log("proxyAdd called - calling doProxyAdd");
+		this.doProxyAdd();
+	}
 }),
 
 enyo.kind({
 	name: "MyApps.Proxify",
 	kind: enyo.VFlexBox,
+
 	components: [
 		{kind: "ApplicationEvents", onLoad: "appLoaded"},
-		{kind: "PageHeader", name: "header", components: [
-			{content: "Proxify", flex: 1},
-			{name: "edit", kind: "Button", onclick: "edit"},
-			{name: "backButton", kind: "Button", onclick: "edit", onclick: "goBack"},
+		{kind: "AppMenu", name: "appMenu", components: [
+			{ kind: "HelpMenu", target: "http://openmobl.mobi/help/proxify/" }
 		]},
+
+		{kind: "Toolbar", name: "header", className: "header enyo-toolbar-light", pack: "center", components: [
+			{ kind: "HFlexBox", pack: "center", align: "center", components: [
+			 	{ className: "header-icon" },
+			 	{ content: $L( "Web Proxy" ), style: "padding-left:10px;" }
+			]},
+			/*{ flex: 1, components: [{kind: "ToggleButton", flex: 1, name: "proxyToggle", style: "float: right;", showing: true, onChange: "handleProxyToggle" } ] }*/
+			/*{name: "edit", kind: "Button", onclick: "edit"},*/
+		]},
+		{className:"header-shadow"},
 		
  		{name: "pane", kind: "Pane", flex: 1, onSelectView: "viewSelected", components: [
-			{name: "list", kind: "MyApps.List"},
+			{name: "list", kind: "MyApps.List", onProxyAdd: "handleProxyAdd", onProxyEdit: "handleProxyEdit"},
 			{name: "add", kind: "MyApps.AddList"},
 		]},
 		
@@ -350,22 +399,30 @@ enyo.kind({
 	},
 	
 	viewSelected: function(inSender, inView) {
-		if (inView == this.$.list) {
-			this.$.edit.show();
-			this.$.backButton.hide();
+		/*if (inView == this.$.list) {
+			this.$.proxyToggle.show();
 		}
 		else if (inView == this.$.add) {
-			this.$.edit.hide();
-			this.$.backButton.show();
-		}
+			this.$.proxyToggle.hide();
+		}*/
 	},
-	
-	goBack: function(inSender, inEvent) {
-		this.$.pane.back(inEvent);
+
+	handleProxyToggle: function() {
+
 	},
 	
 	edit: function() {
 		MyApps.Proxify.pane = this.$.pane;
 		this.$.pane.selectViewByName("add");
 	},
+
+	handleProxyEdit: function(inSender, inEvent) {
+		console.log("handleProxyEdit");
+		this.edit();
+	},
+
+	handleProxyAdd: function(inSender, inEvent) {
+		console.log("handleProxyAdd");
+		this.edit();
+	}
 });
